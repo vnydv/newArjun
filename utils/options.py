@@ -7,7 +7,7 @@ class Options:
     CROP_IMAGES = True
 
     # merge nearby boxes
-    MERGE_NEARBY = False
+    MERGE_NEARBY = True
 
     # save CSV
     SAVE_CSV = False

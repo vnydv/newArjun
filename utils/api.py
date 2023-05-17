@@ -167,10 +167,10 @@ class MotionsRecorder(ABC):
     def startRecording(self):
         camID = -1
         while camID == -1:
-            #camID = self.get_cam_deviceID(self.VID_RESO, self.FPS)
+            #camID = self.get_cam_deviceID(options.Options.VID_RESO, self.FPS)
             camID = camConnect.CamConnect.get_cam_deviceID(options.Options.VID_RESO, options.Options.FPS)
 
-        self.cap = cv2.VideoCapture(f"v4l2src device=/dev/video{camID} ! video/x-raw, width={options.Options.options.Options.VID_RESO[0]}, height={self.VID_RESO[1]}, framerate={self.FPS}/1, format=(string)UYVY ! decodebin ! videoconvert ! appsink", cv2.CAP_GSTREAMER)
+        self.cap = cv2.VideoCapture(f"v4l2src device=/dev/video{camID} ! video/x-raw, width={options.Options.options.Options.VID_RESO[0]}, height={options.Options.VID_RESO[1]}, framerate={self.FPS}/1, format=(string)UYVY ! decodebin ! videoconvert ! appsink", cv2.CAP_GSTREAMER)
         #log.info("Cam started functioning")
 
         skipCount = 0

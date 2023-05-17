@@ -45,7 +45,7 @@ class AllFrameCapture(api.MotionsRecorder):
         
         elif options.Options.CROP_IMAGES:     
             # merge nearby boxes        
-            merged_bboxes, _ = options.Options.merge_boxes(bbox,options.Options.BOX_MERGE_MAX_DIST)
+            merged_bboxes, _ = mergeCollate.MergeCollator.merge_boxes(bbox,options.Options.BOX_MERGE_MAX_DIST)
             # twice to merge new overlapping ones
             merged_bboxes, sizes = mergeCollate.MergeCollator.merge_boxes( merged_bboxes, 0 )
 

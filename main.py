@@ -30,7 +30,7 @@ class AllFrameCapture(api.MotionsRecorder):
         return super().process_image(frame)
     
     def saveImages(self, img):
-        asMovement, img2, bbox, sizes = self.process_img(img.copy())
+        hasMovement, img2, bbox, sizes = self.process_image(img.copy())
 
         if options.OptionsFRAME_DEBUG:
             img = img2

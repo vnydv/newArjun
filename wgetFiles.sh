@@ -1,14 +1,13 @@
-UTIL_DIR = "/usr/sbin/camWIP/utils"
-MAIN_DIR = "/usr/sbin/camWIP"
-
-
-
 
 ## change to util and get the required files
-cd $UTIL_DIR
+cd "/usr/sbin/camWIP/utils"
 
 ## clear existing files
-rm -f *
+rm __init__.py
+rm api.py
+rm camConnect.py
+rm mergeCollate.py
+rm options.py
 
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/__init__.py"
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/api.py"
@@ -16,7 +15,7 @@ wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/camConnect.p
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/mergeCollate.py"
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/options.py"
 
-cd $MAIN_DIR
+cd "/usr/sbin/camWIP"
 rm main.py
 
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/main.py"

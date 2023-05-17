@@ -8,6 +8,7 @@ class MergeCollator():
     def merge_boxes(boxes, DIST):
         ''''''   
         merged_boxes = []
+        sizes = []
 
         for box in boxes:
             # Create a temp copy of box

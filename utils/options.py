@@ -62,9 +62,4 @@ class Options:
 
     BOX_MERGE_MAX_DIST = 30
     
-    img_mean_persec_list = []    
-    img_count_sum = 0
-    img_count = 0
-    # for storing frames as collection of 1 sec
-    last_minute = None
-    last_second = None
+    

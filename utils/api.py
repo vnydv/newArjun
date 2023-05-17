@@ -89,7 +89,7 @@ class MotionsRecorder(ABC):
             x,y = x-5,y-5
             w,h = w+10,h+10
 
-            if self.CONTOUR_AREA_LIMIT < area:                
+            if options.Options.CONTOUR_AREA_LIMIT < area:                
                 x = 0 if x < 0 else options.Options.VID_RESO[0] if x > options.Options.VID_RESO[0] else x
                 y = 0 if y < 0 else options.Options.VID_RESO[1] if y > options.Options.VID_RESO[1] else y
                 w = options.Options.VID_RESO[0]-x if x+w > options.Options.VID_RESO[0] else w
@@ -110,7 +110,7 @@ class MotionsRecorder(ABC):
             x,y = x-5,y-5
             w,h = w+10,h+10
 
-            if self.CONTOUR_AREA_LIMIT < area:
+            if options.Options.CONTOUR_AREA_LIMIT < area:
                 # remove red countous
                 enclosedRed = []
                 enclosedSizesRed = []
@@ -190,6 +190,6 @@ class MotionsRecorder(ABC):
     
     @abstractmethod
     def stopRecording(self):
-        self.save_recording()
+        self.saveRecording()
         self.cap.release()
         cv2.destroyAllWindows()

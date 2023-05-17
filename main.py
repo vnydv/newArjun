@@ -14,8 +14,18 @@ import rpack
 
 class AllFrameCapture(api.MotionsRecorder):
 
+    
+
+
     def __init__(self):
         super().__init__()
+
+        self.img_mean_persec_list = []    
+        self.img_count_sum = 0
+        self.img_count = 0
+        # for storing frames as collection of 1 sec
+        self.last_minute = None
+        self.last_second = None
 
     def read_conf_options(self):
         super().read_conf_options()

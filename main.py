@@ -14,9 +14,6 @@ import rpack
 
 class AllFrameCapture(api.MotionsRecorder):
 
-    
-
-
     def __init__(self):
         super().__init__()
 
@@ -42,13 +39,13 @@ class AllFrameCapture(api.MotionsRecorder):
     def saveImages(self, img):
         hasMovement, img2, bbox, sizes = self.process_image(img.copy())
 
-        if options.OptionsFRAME_DEBUG:
+        if options.Options.FRAME_DEBUG:
             img = img2
             hasMovement = True
         
-        elif options.OptionsCROP_IMAGES:     
+        elif options.Options.CROP_IMAGES:     
             # merge nearby boxes        
-            merged_bboxes, _ = options.Optionsmerge_boxes(bbox,options.OptionsBOX_MERGE_MAX_DIST)
+            merged_bboxes, _ = options.Options.merge_boxes(bbox,options.Options.BOX_MERGE_MAX_DIST)
             # twice to merge new overlapping ones
             merged_bboxes, sizes = mergeCollate.MergeCollator.merge_boxes( merged_bboxes, 0 )
 
@@ -62,7 +59,7 @@ class AllFrameCapture(api.MotionsRecorder):
             self.last_minute = now.minute
         elif self.last_minute != now.minute:
             # if sec changes, save last second count data            
-            if options.OptionsSAVE_CSV: self.save_csv(now)
+            if options.Options.SAVE_CSV: self.save_csv(now)
             #reset all
             self.last_minute = now.minute
             self.img_mean_persec_list = []
@@ -75,12 +72,12 @@ class AllFrameCapture(api.MotionsRecorder):
             # save image file
             self.temp_image_name = f'{now.strftime("%d-%m-%Y_%H-%M-%S-%f")}_{options.Options.DEVICE_SERIAL_ID}.jpg'
             #self.save_recording(img)
-            if options.OptionsFRAME_DEBUG:
+            if options.Options.FRAME_DEBUG:
                 debug_temp_image_name = f'{now.strftime("%d-%m-%Y_%H-%M-%S-%f")}_{options.Options.DEVICE_SERIAL_ID}_debug.jpg'
-                cv2.imwrite(options.OptionsBUFFER_IMAGES_PATH + debug_temp_image_name, img2)
+                cv2.imwrite(options.Options.BUFFER_IMAGES_PATH + debug_temp_image_name, img2)
 
-            cv2.imwrite(options.OptionsBUFFER_IMAGES_PATH + self.temp_image_name, img)
-            if options.OptionsLOG_DEBUG: print('Saved Image: ', self.temp_image_name, len(bbox))
+            cv2.imwrite(options.Options.BUFFER_IMAGES_PATH + self.temp_image_name, img)
+            if options.Options.LOG_DEBUG: print('Saved Image: ', self.temp_image_name, len(bbox))
 
             # assign count data                        
             self.img_count_sum += len(bbox)
@@ -99,7 +96,7 @@ class AllFrameCapture(api.MotionsRecorder):
             else:
                 mean_count_persec = 0
 
-            self.img_mean_persec_list.append((options.OptionsDEVICE_SERIAL_ID, now.strftime("%d-%m-%Y_%H-%M-%S"), mean_count_persec))
+            self.img_mean_persec_list.append((options.Options.DEVICE_SERIAL_ID, now.strftime("%d-%m-%Y_%H-%M-%S"), mean_count_persec))
             
             #reset all
             self.last_second = now.second                
@@ -110,8 +107,8 @@ class AllFrameCapture(api.MotionsRecorder):
         # save as count_timeFrame_deviceID_countMeanInt.csv
         # save as count_DD-MM-YYYY_hh-mm_DOxxx_XXXX.csv
 
-        csvName = f'count_{timeNow.strftime("%d-%m-%Y_%H")}-{self.last_minute}_{options.OptionsDEVICE_SERIAL_ID}.csv'
-        with open(options.OptionsBUFFER_COUNT_PATH + csvName, 'w',  newline='') as csvFile:
+        csvName = f'count_{timeNow.strftime("%d-%m-%Y_%H")}-{self.last_minute}_{options.Options.DEVICE_SERIAL_ID}.csv'
+        with open(options.Options.BUFFER_COUNT_PATH + csvName, 'w',  newline='') as csvFile:
             csvwriter = csv.writer(csvFile)
             # header
             csvwriter.writerow(["device_id","time_frame","insect_count"])        
@@ -119,7 +116,7 @@ class AllFrameCapture(api.MotionsRecorder):
             csvwriter.writerows(self.img_mean_persec_list)
     
         log.info("Video bbox count CSV crealog.info("")ted and saved -> "+csvName)
-        if options.OptionsLOG_DEBUG: print('CSV saved', csvName)
+        if options.Options.LOG_DEBUG: print('CSV saved', csvName)
 
     def saveRecording(self, image):
         return super().saveRecording(image)

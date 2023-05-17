@@ -1,5 +1,6 @@
 import rpack
 import numpy as np
+from . import options
 
 class MergeCollator():
 
@@ -120,7 +121,7 @@ class MergeCollator():
         
         reqH = reqW = max(reqW, reqH)
         # no indent
-        if reqH >= MergeCollator.VID_RESO[0]:
+        if reqH >= options.Options.VID_RESO[0]:
             print("Exceeds original size, returning")
             return img
 

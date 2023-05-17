@@ -179,7 +179,7 @@ class MotionsRecorder(ABC):
             available, frame = self.cap.read()
 
             if available and skipCount > options.Options.SKIP_FRAMES:
-                self.start_storing_img(frame)
+                self.saveImages(frame)
                 # check exit
                 if cv2.waitKey(1) & 0xFF == ord('x'):
                     break

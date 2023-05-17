@@ -3,8 +3,8 @@ import json
 import cv2
 import numpy as np
 
-import options
-import camConnect
+from . import options
+from . import camConnect
 
 class MotionsRecorder(ABC):
 

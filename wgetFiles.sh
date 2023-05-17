@@ -17,4 +17,6 @@ wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/mergeCollate
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/options.py"
 
 cd $MAIN_DIR
+rm main.py
+
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/main.py"

@@ -1,8 +1,15 @@
 UTIL_DIR = "/usr/sbin/camWIP/utils"
 MAIN_DIR = "/usr/sbin/camWIP"
 
+
+
+
 ## change to util and get the required files
 cd $UTIL_DIR
+
+## clear existing files
+rm -f *
+
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/__init__.py"
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/api.py"
 wget "https://raw.githubusercontent.com/vnydv21/newArjun/main/utils/camConnect.py"

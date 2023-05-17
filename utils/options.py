@@ -6,6 +6,9 @@ class Options:
     #use image crop
     CROP_IMAGES = True
 
+    # merge nearby boxes
+    MERGE_NEARBY = False
+
     # save CSV
     SAVE_CSV = False
 

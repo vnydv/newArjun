@@ -59,7 +59,7 @@ def read_image_info(aws_timestamps, data):
         size_of_string = len(data_part)
         end_img = int(info_part[0:2], 16)
         deviceId = info_part[2:4]
-        deviceId = int(deviceId, 16)
+        #deviceId = int(deviceId, 16)
         chunkId = int(info_part[4:6], 16)
         totalChunks = int(info_part[6:8], 16)
         timestamp = info_part[8:28]

@@ -5,23 +5,28 @@ import datetime
 from base64 import b64decode, b64encode
 # import os
 
-
-# todo
-# get frames, counter, time, totalChunks etc. in oneline / message
-# convert to images
-
 # # clean tmp folder before use
 # os.system('rm -r tmp')
 # os.system('mkdir tmp')
 
 #jsonFileName = "subscription_mqtt_data.json"
-jsonFileName = "/home/omen/Downloads/subscription_mqtt_data.json"
+jsonFileName = ""
+
+if jsonFileName == "":
+    print("Please set JSON file name! at line 13")
+    exit()
+
+
 
 temp_pkts = {}
 aws_timestamps = []
 
+aws_dev_timestamps = {}
+
 Actualdata = {}
 MissingTimestamp_dummyData = {}
+
+Data_wrt_device = {}
 
 ImageIDs = {}
 
@@ -37,7 +42,8 @@ def read_image_info(aws_timestamps, data):
     # list
     count = len(data['messages'])
 
-    lastImgID = -1
+    #lastImgID = -1
+    lastImgID = {}
 
     for msg in data['messages']:
         payload = msg["payload"]["counter"]
@@ -58,31 +64,45 @@ def read_image_info(aws_timestamps, data):
 
         image_id = int(info_part[28:30], 16)
     
-        if lastImgID == -1:
-            lastImgID = image_id
+        if not deviceId in Data_wrt_device:
+            Data_wrt_device[deviceId] = {}
+            lastImgID[deviceId] = -1
+            aws_dev_timestamps[deviceId] = []
+
+        if lastImgID[deviceId] == -1:
+            lastImgID[deviceId] = image_id
 
         #k = DecodeTimeStampsFromDevice(timestamp)
 
-        if not image_id in ImageIDs:
-            ImageIDs[image_id] = {"TotalChunks": totalChunks, "Rxd": [chunkId], "LateRxd": []}
+        #if not image_id in ImageIDs:
+        if not image_id in Data_wrt_device[deviceId]:
+            #ImageIDs[image_id] = {"TotalChunks": totalChunks, "Rxd": [chunkId], "LateRxd": []}
+            Data_wrt_device[deviceId][image_id] = {"TotalChunks": totalChunks, "Rxd": [chunkId], "LateRxd": []}
 
         else:
             #ImageIDs[image_id] += [chunkID]
-            if lastImgID != image_id:
-                ImageIDs[image_id]["LateRxd"] += [chunkId]
+            if lastImgID[deviceId] != image_id:
+                Data_wrt_device[deviceId][image_id]["LateRxd"] += [chunkId]
 
-            ImageIDs[image_id]["Rxd"] += [chunkId]
+            Data_wrt_device[deviceId][image_id]["Rxd"] += [chunkId]
 
-        lastImgID = image_id
+        lastImgID[deviceId] = image_id
 
         print(image_id, deviceId, chunkId, totalChunks, timestamp, aws_timestamp, end_img)
  
         temp_pkts[aws_timestamp] = (chunkId, totalChunks)
         aws_timestamps.append(aws_timestamp)
+        aws_dev_timestamps[deviceId].append((image_id, deviceId, chunkId, totalChunks, timestamp, aws_timestamp, end_img))
 
         Actualdata[aws_timestamp] = (data_part, end_img, chunkId)
 
         #temp_pkts.append([chunkId, totalChunks])
+
+    print("\n\n Sorted by devices:")
+    for i in sorted(aws_dev_timestamps):
+        for j in aws_dev_timestamps[i]:
+            print(*j)
+        print()
 
     #print("Scan Count:", count)
     # Closing file
@@ -91,167 +111,73 @@ def read_image_info(aws_timestamps, data):
 
 def generate_missed_data():
     
-    for imgID in sorted(ImageIDs.keys()):
-        _data = ImageIDs[imgID]
-        total = _data["TotalChunks"]
-        
-        fall = [i+1 for i in range(total)]
+    print("MISSED------")
+    for did in sorted(Data_wrt_device.keys()):        
+        for imgID in sorted(Data_wrt_device[did].keys()):
+            _data = Data_wrt_device[did][imgID]
+            total = _data["TotalChunks"]
+            
+            fall = [i+1 for i in range(total)]
 
-        dups = []
-        # check if any duplicates
-        for fid in _data["Rxd"]:
-            if not fid in fall:
-                dups.append(fid)
-            else:
-                fall.remove(fid)
+            dups = []
+            # check if any duplicates
+            for fid in _data["Rxd"]:
+                if not fid in fall:
+                    dups.append(fid)
+                else:
+                    fall.remove(fid)
+                    
+            # print if missing:
+            if len(fall) != 0:
+                print("MISSED: devID:",did ,"imgID:", imgID, "lost:", fall)            
+            
+
+        print()
+
+    print("DUPLICATES------")
+    for did in sorted(Data_wrt_device.keys()):        
+        for imgID in sorted(Data_wrt_device[did].keys()):
+            _data = Data_wrt_device[did][imgID]
+            total = _data["TotalChunks"]
+            
+            fall = [i+1 for i in range(total)]
+
+            dups = []
+            # check if any duplicates
+            for fid in _data["Rxd"]:
+                if not fid in fall:
+                    dups.append(fid)
+                else:
+                    fall.remove(fid)
+                    
+            # print if duplicates
+            if len(dups) != 0:
+                print("DUPLIC: devID:",did ,"imgID:", imgID, "dups:", dups)
+            
+        print()
                 
-        # print if missing:
-        if len(fall) != 0:
-            print("MISSED: imgID:", imgID, "lost:", fall)            
-        
-        # print if duplicates
-        if len(dups) != 0:
-            print("Duplicates: imgID:", imgID, "dups:", dups)
-        
-        # print if late
-        _late = _data["LateRxd"]
-        if len(_late) != 0:
-            print("Late Received: imgID:", imgID, "frags:", _late)
+    print("LATERX------")
+    for did in sorted(Data_wrt_device.keys()):        
+        for imgID in sorted(Data_wrt_device[did].keys()):
+            _data = Data_wrt_device[did][imgID]
+            total = _data["TotalChunks"]
             
+            fall = [i+1 for i in range(total)]
 
-        
-
-
-def save_to_image():
-    pass
-
-
-    #flag = True
-
-    # try:
-    #     if image_id not in image_data:
-    #         image_data[image_id] = {}
-    
-    #     if 'image_text' not in image_data[image_id]:
-    #         image_data[image_id][image_text] = [None] * totalChunks
+            dups = []
+            # check if any duplicates
+            for fid in _data["Rxd"]:
+                if not fid in fall:
+                    dups.append(fid)
+                else:
+                    fall.remove(fid)
             
-    #     if 'frag_id' not in image_data[image_id]:
-    #         image_data[image_id][frag_id] = 0
+            # print if late
+            _late = _data["LateRxd"]
+            if len(_late) != 0:
+                print("LATERX: devID:",did ,"imgID:", imgID, "frags:", _late)
 
-            
-    #     if chunkId > image_data[image_id][frag_id]:
-    #         image_data[image_id][frag_id] = chunkId
-    #         image_data[image_id][image_text][chunkId-1] = {
-    #             "data_part": data_part,
-    #             "deviceId": deviceId,
-    #             "timestamp": timestamp,
-    #             "end_img": end_img
-    #         }
-    #         if chunkId == len(image_data[image_id][image_text]):
-    #             full_image_data = ""
-    #             name = ""
-    #             deviceId = ""
-    #             for index, data in enumerate(image_data[image_id][image_text]): 
-    #                 if data is not None:
-    #                     name = data["timestamp"]
-    #                     deviceId = data["deviceId"]
-    #                     if index == len(image_data[image_id][image_text])-1:
-    #                         full_image_data+=(data['data_part'][0: end_img*256])
-    #                     else:
-    #                         full_image_data+=data['data_part']   
-    #                 else: 
-    #                     if index == 0:
-    #                         full_image_data+= "ffd8ff"
-    #                         full_image_data+= "0"*(size_of_string-6)
-    #                     elif index == len(image_data[image_id][image_text])-1:
-    #                         full_image_data+= "0"*(end_img-4)
-    #                         full_image_data+="ffd9"
-    #                     else:
-    #                         full_image_data+="0"*size_of_string
-    #             decoded_bytes = bytes.fromhex(full_image_data)
-    #             base64_str = b64encode(decoded_bytes).decode() 
-    #             JPEG_r = b64decode(base64_str)
-    #             na_r = cv2.imdecode(np.frombuffer(JPEG_r, dtype=np.uint8), cv2.IMREAD_COLOR)
-    #             filename = '/tmp/' + "test.jpg"
-    #             cv2.imwrite(filename, na_r)  
-    #             name = deviceId + "_" + time_conversion(name) + ".jpg"                
-    #             #del image_data[image_id] #---Required ??
-    #     else:
-    #         flag = False
-    #         full_image_data = ""
-    #         name = ""
-    #         deviceId = ""
-    #         last_index = size_of_string
-    #         for index, data in enumerate(image_data[image_id][image_text]): 
-    #             if data is not None:
-    #                 name = data["timestamp"]
-    #                 deviceId = data["deviceId"]
-    #                 last_index = data["end_img"]
-    #                 if index == len(image_data[image_id][image_text])-1:
-    #                     full_image_data+=(data['data_part'][0: last_index*256])
-    #                 else:
-    #                     full_image_data+=data['data_part']   
-    #             else: 
-    #                 if index == 0:
-    #                     full_image_data+= "ffd8ff"
-    #                     full_image_data+= "0"*(size_of_string-6)
-    #                 elif index == len(image_data[image_id][image_text])-1:
-    #                     full_image_data+= "0"*(last_index-4)
-    #                     full_image_data+="ffd9"
-    #                 else:
-    #                     full_image_data+="0"*size_of_string
-    #         del image_data[image_id]
-    #         if image_id not in image_data:
-    #             image_data[image_id] = {}
-        
-    #         if 'image_text' not in image_data[image_id]:
-    #             image_data[image_id][image_text] = [None] * totalChunks
-                
-    #         if 'frag_id' not in image_data[image_id]:
-    #             image_data[image_id][frag_id] = 0
-            
-    #         image_data[image_id][frag_id] = chunkId
-    #         image_data[image_id][image_text][chunkId-1] = {
-    #             "data_part": data_part,
-    #             "deviceId": deviceId,
-    #             "timestamp": timestamp,
-    #             "end_img": end_img
-    #         }
-            
-    #         decoded_bytes = bytes.fromhex(full_image_data)
-    #         base64_str = b64encode(decoded_bytes).decode() 
-    #         JPEG_r = b64decode(base64_str)
-    #         na_r = cv2.imdecode(np.frombuffer(JPEG_r, dtype=np.uint8), cv2.IMREAD_COLOR)
-    #         filename = '/tmp/' + "test.jpg"
-    #         cv2.imwrite(filename, na_r)  
-    #         name = deviceId + "_" + time_conversion(name) + ".jpg"
-    #         # -- ?? shouldn't the filename be name rather than ./test.jpg
-    #         #s3_resource.Object(bucket_name, name).upload_file(Filename=filename)
-    
-                
-    # except Exception as exc:
-    #     # if image_id not in image_data:
-    #     #     image_data[image_id] = {}
-    
-    #     # if 'image_text' not in image_data[image_id]:
-    #     #     image_data[image_id]['image_text'] = [None] * totalChunks
-            
-    #     # if 'frag_id' not in image_data[image_id]:
-    #     #     image_data[image_id]['frag_id'] = 0
-            
-    #     # image_data[image_id][image_text] = [None] * totalChunks
-    #     # image_data[image_id][frag_id] = chunkId
-    #     # image_data[image_id][image_text][chunkId-1] = {
-    #     #     "data_part": data_part,
-    #     #     "deviceId": deviceId,
-    #     #     "timestamp": timestamp
-    #     # }
-    #     if flag == True:
-    #         del image_data[image_id]
-    #     return {
-    #         'statusCode': 400,
-    #         'body': json.dumps(str(exc)) 
-    #     }
+        print()
 
 ok_timestamps = {}
 
@@ -555,7 +481,6 @@ def test_random_tmpst(tmp):
 read_image_info(aws_timestamps, Actualdata)
 
 print("\n\nSummary:\n")
-
 generate_missed_data()
 
 #make_images(MissingTimestamp_dummyData)

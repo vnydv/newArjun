@@ -1,9 +1,11 @@
 import json
-#import numpy as np
-#import cv2
+# import numpy as np
+# import cv2
 import datetime
 from base64 import b64decode, b64encode
-# import os
+import os
+
+from datetime import datetime
 
 # # clean tmp folder before use
 # os.system('rm -r tmp')
@@ -58,11 +60,21 @@ def read_image_info(aws_timestamps, data):
         data_part = base16_str[256:]
         size_of_string = len(data_part)
         end_img = int(info_part[0:2], 16)
-        deviceId = info_part[2:4]
+        deviceId = info_part[2:4]        
         #deviceId = int(deviceId, 16)
         chunkId = int(info_part[4:6], 16)
         totalChunks = int(info_part[6:8], 16)
-        timestamp = info_part[8:28]
+        #timestamp = info_part[8:28]
+        timestamp = ""
+
+        for _i in range(8,28,2):            
+            if "ff" in str(info_part[_i:_i+2]):
+                timestamp += "0"
+            else:
+                timestamp+= str(int(info_part[_i:_i+2]))
+
+
+        timestamp = int(timestamp)
 
         image_id = int(info_part[28:30], 16)
     
@@ -91,7 +103,7 @@ def read_image_info(aws_timestamps, data):
 
         lastImgID[deviceId] = image_id
 
-        print(image_id, deviceId, chunkId, totalChunks, timestamp, aws_timestamp, end_img)
+        print(image_id, deviceId, chunkId, totalChunks, int(timestamp), aws_timestamp, end_img)
  
         temp_pkts[aws_timestamp] = (chunkId, totalChunks)
         aws_timestamps.append(aws_timestamp)
@@ -108,7 +120,7 @@ def read_image_info(aws_timestamps, data):
         rx_time_info[did]["max"] = -1
         rx_time_info[did]["min"] = 1e10
         rx_time_info[did]["mean"] = 0
-        print(*aws_dev_timestamps[did][-1],'',0, sep='\t')
+        print(*aws_dev_timestamps[did][-1],'',0, datetime.fromtimestamp(aws_dev_timestamps[did][-1][4]), datetime.fromtimestamp(_ltime//1000), sep="\t")
 
         for j in aws_dev_timestamps[did][::-1][1:]:
             _ctime = j[5]
@@ -118,7 +130,7 @@ def read_image_info(aws_timestamps, data):
             rx_time_info[did]["mean"] += _diff//1000
             rx_time_info[did]["min"] = min(rx_time_info[did]["min"], _diff//1000)
 
-            print(*j,'',_diff//1000, sep="\t")
+            print(*j,'',_diff//1000, datetime.fromtimestamp(j[4]), datetime.fromtimestamp(_ctime//1000), sep="\t")
             _ltime = _ctime
         
         rx_time_info[did]["mean"] //= len(aws_dev_timestamps[did])
@@ -224,7 +236,7 @@ def make_images(msdd):
     #pkts_timestamps = sorted(temp_pkts.keys())
 
     for tmp in aws_timestamps[::-1]:
-        cur_frame_id, cur_tot_frames = temp_pkts[tmp]        
+        cur_frame_id, cur_tot_frames = temp_pkts[tmp]
 
         if len(found_frames) == 0:
             print()
@@ -511,14 +523,14 @@ def test_random_tmpst(tmp):
 
 read_image_info(aws_timestamps, Actualdata)
 
-print("\n\nSummary:\n")
+# print("\n\nSummary:\n")
 generate_missed_data()
 
-#make_images(MissingTimestamp_dummyData)
+# make_images(MissingTimestamp_dummyData)
 #print_timestamp_info()
-print('\n\n')
+# print('\n\n')
 
-#construct_images()
+# construct_images()
 
 # test_random_tmpst(1704948138752)
 # test_random_tmpst(1704948206787)

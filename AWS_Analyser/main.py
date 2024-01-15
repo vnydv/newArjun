@@ -28,6 +28,8 @@ MissingTimestamp_dummyData = {}
 
 Data_wrt_device = {}
 
+rx_time_info = {}
+
 ImageIDs = {}
 
 def read_image_info(aws_timestamps, data):        
@@ -68,6 +70,7 @@ def read_image_info(aws_timestamps, data):
             Data_wrt_device[deviceId] = {}
             lastImgID[deviceId] = -1
             aws_dev_timestamps[deviceId] = []
+            rx_time_info[deviceId] = {"max":-1, "min":-1, "mean":-1}
 
         if lastImgID[deviceId] == -1:
             lastImgID[deviceId] = image_id
@@ -99,9 +102,27 @@ def read_image_info(aws_timestamps, data):
         #temp_pkts.append([chunkId, totalChunks])
 
     print("\n\n Sorted by devices:")
-    for i in sorted(aws_dev_timestamps):
-        for j in aws_dev_timestamps[i]:
-            print(*j)
+    for did in sorted(aws_dev_timestamps):
+        
+        _ltime = aws_dev_timestamps[did][-1][5]
+        rx_time_info[did]["max"] = -1
+        rx_time_info[did]["min"] = 1e10
+        rx_time_info[did]["mean"] = 0
+        print(*aws_dev_timestamps[did][-1],'',0, sep='\t')
+
+        for j in aws_dev_timestamps[did][::-1][1:]:
+            _ctime = j[5]
+            _diff = _ctime - _ltime
+            
+            rx_time_info[did]["max"] = max(rx_time_info[did]["max"], _diff//1000)
+            rx_time_info[did]["mean"] += _diff//1000
+            rx_time_info[did]["min"] = min(rx_time_info[did]["min"], _diff//1000)
+
+            print(*j,'',_diff//1000, sep="\t")
+            _ltime = _ctime
+        
+        rx_time_info[did]["mean"] //= len(aws_dev_timestamps[did])
+
         print()
 
     #print("Scan Count:", count)
@@ -111,6 +132,16 @@ def read_image_info(aws_timestamps, data):
 
 def generate_missed_data():
     
+
+    print("Timings (s)-------btw IoT core payloads")
+    for did in sorted(Data_wrt_device.keys()):
+        _max = rx_time_info[did]["max"]
+        _min = rx_time_info[did]["min"]
+        _mean = rx_time_info[did]["mean"]
+
+        print("devID:",did, "min:",_min, "avg:",_mean,"max:", _max,sep='\t')
+
+    print()
     print("MISSED------")
     for did in sorted(Data_wrt_device.keys()):        
         for imgID in sorted(Data_wrt_device[did].keys()):

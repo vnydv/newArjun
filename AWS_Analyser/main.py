@@ -50,8 +50,13 @@ def read_image_info(aws_timestamps, data):
     lastImgID = {}
 
     for msg in data['messages']:
-        payload = msg["payload"]["counter"]
         aws_timestamp = msg["timestamp"]
+        try:
+            payload = msg["payload"]["counter"]
+        except:
+            print("Invalid packet:",aws_timestamp)
+            continue
+        #aws_timestamp = msg["timestamp"]
 
         decoded_bytes = b64decode(payload)
         base16_str = decoded_bytes.hex()
